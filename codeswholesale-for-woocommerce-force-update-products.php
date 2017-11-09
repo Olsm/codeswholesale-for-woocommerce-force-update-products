@@ -11,11 +11,22 @@ use CodesWholesaleFramework\Postback\UpdatePriceAndStock\UpdatePriceAndStockActi
 add_action("activated_plugin", 'force_update_price_and_stock');
 
 function force_update_price_and_stock() {
-    $products = wc_get_products(['status' => 'publish']);
-    foreach ($products as $product) {
+    $args = ['status' => 'publish',
+            'paginate' => true,
+            'page' => 1];
+
+    while ($args['page'] <= ($products = wc_get_products($args))->max_num_pages) {
         set_time_limit(10);
-        update_price_and_stock_by_post_id($product->id);
+        $products = $products->products;
+
+        foreach ($products as $product) {
+            set_time_limit(10);
+            update_price_and_stock_by_post_id($product->id);
+        }
+
+        $args['page']++;
     }
+
     deactivate_plugins( plugin_basename( __FILE__ ) );
 }
 
